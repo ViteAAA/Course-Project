@@ -1,58 +1,70 @@
+/*
+ * Точка входа
+ * Интерактивное меню
+*/
+
 #include <stdio.h>
 #include <windows.h>
-#include <stdbool.h>
+#include "accountingExportProducts.h"
 
 
-#include "Includes/header.h"
-#include "Includes/talking.h"
-
-void ChooseFileForRead() {
-    ToggleFile();
-    if (strcmp(toggledFileName, "") != 0) {
-        ReadCustomFile(toggledFileName);
-    }
-    else {
-        puts("NET");
-    }
-    OutputTable(products, table_header);
+void menuPrintOptions() {
+    HANDLE *const hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 10);
+    printf("Выберите пункт меню:\n");
+    SetConsoleTextAttribute(hConsole, 15);
+    printf("0. Выход\n");
+    printf("1. Чтение из файла\n");
+    printf("2. Вывод таблицы\n");
+    printf("3. Добавление записи\n");
+    printf("4. Изменение записи\n");
+    printf("5. Удаление записи\n");
+    printf("6. Вычисление и вывод статистики\n");
+    printf("7. Сохранение в файл\n");
 }
 
-
-
 int main() {
-    SetConsoleCP(CP_UTF8);
-    SetConsoleOutputCP(CP_UTF8);
 
-    int turn = 0;
-    boolean isExit = false;
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
 
-    while (!isExit) {
-        AskQuest(&turn);
-        switch (turn) {
+    // Вывод пунктов меню
+    // Ожидаем ввод пункта меню
+    // Определить, какой тип меню выбран
+    int choice = -1;
+
+
+    while (choice != 0) {
+        menuPrintOptions();
+        scanf("%d", &choice);
+        switch (choice) {
             case 1:
-                ChooseFileForRead();
+                menuReadFromFile();
                 break;
             case 2:
-                if (products != NULL) {
-                    ToggleFile();
-                    if (strcmp(toggledFileName, "") != 0) {
-                        WriteCustomFile(products, toggledFileName);
-                    }
-                }
-                else {
-                    puts("РќРµС‚ РґР°РЅРЅС‹С…\n");
-                }
+                menuPrintTable();
                 break;
             case 3:
-                isExit = true;
+                menuAddRecord();
+                break;
+            case 4:
+                menuUpdateRecord();
+                break;
+            case 5:
+                menuDeleteRecord();
+                break;
+            case 6:
+                menuCalcStatistics();
+                break;
+            case 7:
+                menuSaveToFile();
+                break;
             default:
                 break;
         }
+        printf("\n\n");
     }
-    puts("End");
 
-
-
-    free(products);
     return 0;
 }
+
