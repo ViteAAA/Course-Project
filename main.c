@@ -27,7 +27,6 @@ int main() {
 
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-
     // Вывод пунктов меню
     // Ожидаем ввод пункта меню
     // Определить, какой тип меню выбран
@@ -39,7 +38,7 @@ int main() {
         scanf("%d", &choice);
         switch (choice) {
             case 1:
-                menuReadFromFile();
+                menuReadFromFile("../my_file.txt");
                 break;
             case 2:
                 menuPrintTable();

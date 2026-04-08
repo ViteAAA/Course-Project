@@ -27,7 +27,7 @@ extern ProductInfo products[MAX_PRODUCTS];
 /**
  * @brief Read from file
  */
-void menuReadFromFile();
+void menuReadFromFile(const char *filename);
 
 /**
  * @brief Output table
