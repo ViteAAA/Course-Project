@@ -23,6 +23,13 @@ void menuPrintOptions() {
     printf("7. Сохранение в файл\n");
 }
 
+void dialogDeleteRecord() {
+    printf("Введите номер записи для удаления: ");
+    int recordNumber;
+    scanf("%d", &recordNumber);
+    menuDeleteRecord(recordNumber - 1);
+}
+
 int main() {
 
     SetConsoleCP(1251);
@@ -50,7 +57,7 @@ int main() {
                 menuUpdateRecord();
                 break;
             case 5:
-                menuDeleteRecord();
+                dialogDeleteRecord();
                 break;
             case 6:
                 menuCalcStatistics();

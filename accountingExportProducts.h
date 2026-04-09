@@ -23,6 +23,7 @@ typedef struct {
 } ProductInfo;
 
 extern ProductInfo products[MAX_PRODUCTS];
+extern int productsCount;
 
 /**
  * @brief Read from file
@@ -47,7 +48,7 @@ void menuUpdateRecord();
 /**
  * @brief Delete record
  */
-void menuDeleteRecord();
+void menuDeleteRecord(int id_of_deleting_record);
 
 /**
  * @brief Statistics
