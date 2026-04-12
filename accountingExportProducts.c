@@ -26,6 +26,31 @@ void outputInConsole() {
         printf("}\n");
     }
 }
+void outputInConsoleOneProd(ProductInfo prod) {
+    printf("{\n");
+    printf("  \"id\": %d,\n", prod.id);
+    printf("  \"date\": {\n");
+    // Здесь я предположил стандартные поля для даты, подставь свои, если они другие
+    printf("    \"day\": %d,\n", prod.date.day);
+    printf("    \"month\": %d,\n", prod.date.month);
+    printf("    \"year\": %d\n", prod.date.year);
+    printf("  },\n");
+    printf("  \"companyName\": \"%s\",\n", prod.companyName);
+    printf("  \"productName\": \"%s\",\n", prod.productName);
+    printf("  \"productionCount\": %.2f,\n", prod.productionCount);
+    printf("  \"exportCount\": %.2f,\n", prod.exportCount);
+    printf("  \"percentOfExport\": %.2f\n", prod.percentOfExport);
+    printf("}\n");
+}
+
+ProductDate SplitStringToDate(const char *str) {
+    return (ProductDate) {
+        .day = strtol(str, NULL, 10),
+        .month = strtol(str + 3, NULL, 10),
+        .year = strtol(str + 6, NULL, 10)
+    };
+}
+
 
 
 void plug(char s[50]) {
@@ -200,8 +225,49 @@ void menuPrintTable() {
     printf("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 };
 
+
 void menuAddRecord() {
-    plug("Добавление записи");
+    printf("\n");
+    if (productsCount + 1 > MAX_PRODUCTS) {
+        puts("Максимальное количество записей: 1000");
+        return;
+    }
+    puts("Добавление записи:");
+
+    while (getchar() != '\n' && getchar() != EOF) {}
+
+    ProductInfo newProduct;
+    char test_str[MAX_LENGTH_NAME];
+    char *endPtr;
+    newProduct.id = productsCount + 1;
+
+    printf("Введите дату: ");
+    fgets(test_str, sizeof(test_str), stdin);
+    newProduct.date = SplitStringToDate(test_str);
+
+    printf("Введите название компании: ");
+    fgets(test_str, sizeof(test_str), stdin);
+    test_str[strcspn(test_str, "\n")] = '\0';
+    strcpy(newProduct.companyName, test_str);
+
+    printf("Введите название продукта: ");
+    fgets(test_str, sizeof(test_str), stdin);
+    test_str[strcspn(test_str, "\n")] = '\0';
+    strcpy(newProduct.productName, test_str);
+
+    printf("Введите количество произведенного товара, млн.р: ");
+    fgets(test_str, sizeof(test_str), stdin);
+    newProduct.productionCount = strtof(test_str, NULL);
+
+    printf("Введите количество товара, отправленного на экспорт, млн.р: ");
+    fgets(test_str, sizeof(test_str), stdin);
+    newProduct.exportCount = strtof(test_str, NULL);
+
+    newProduct.percentOfExport = (newProduct.exportCount / newProduct.productionCount) * 100;
+
+    outputInConsoleOneProd(newProduct);
+    products[productsCount++] = newProduct;
+    puts("Запись успешно добавлена");
 };
 
 void menuUpdateRecord() {

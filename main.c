@@ -7,6 +7,15 @@
 #include <windows.h>
 #include "accountingExportProducts.h"
 
+char filename[MAX_LENGTH_PRODUCT_NAME + 3];
+
+void inputFilename() {
+    strcpy(filename, "../");
+    char non_formated_filename[MAX_LENGTH_NAME];
+    printf("ֲגוהטעו טלÿ פאיכא: ");
+    scanf("%s", non_formated_filename);
+    strcat(filename, non_formated_filename);
+}
 
 void menuPrintOptions() {
     HANDLE *const hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -30,6 +39,12 @@ void dialogDeleteRecord() {
     menuDeleteRecord(recordNumber - 1);
 }
 
+void dialogReadFromFile() {
+    inputFilename();
+    menuReadFromFile(filename);
+}
+
+
 int main() {
 
     SetConsoleCP(1251);
@@ -45,7 +60,7 @@ int main() {
         scanf("%d", &choice);
         switch (choice) {
             case 1:
-                menuReadFromFile("../my_file.txt");
+                dialogReadFromFile();
                 break;
             case 2:
                 menuPrintTable();
