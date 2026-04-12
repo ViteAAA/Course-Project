@@ -229,7 +229,7 @@ void menuPrintTable() {
 void menuAddRecord() {
     printf("\n");
     if (productsCount + 1 > MAX_PRODUCTS) {
-        puts("Максимальное количество записей: 1000");
+        puts("Превышено максимальное количество записей (1000)");
         return;
     }
     puts("Добавление записи:");
