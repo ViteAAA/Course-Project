@@ -171,32 +171,24 @@ void splitInfo(const char *str) {
     outputInConsole();
 }
 
+
 void menuReadFromFile(const char *filename) {
     // plug("Чтение из файла");
     FILE* in = fopen(filename, "r");
     if (in == NULL) {
-        fclose(in);
         return;
     }
     fseek(in, 0, SEEK_END);
 
-    const int capacity = ftell(in);
-    char buff[capacity + 1];
+    const int capacity = (int)ftell(in);
+    char *buff = malloc(capacity + 1);
     fseek(in, 0, SEEK_SET);
 
 
-
-
-
-
-    int ch;
-    int i = 0;
-    while ((ch = fgetc(in)) != EOF) {
-
-        buff[i++] = (char)ch;
-    }
-    buff[i] = '\0';
+    const size_t bytes_read = fread(buff, 1, capacity, in);
+    buff[bytes_read] = '\0';
     splitInfo(buff);
+    free(buff);
     fclose(in);
 
 };
@@ -270,11 +262,55 @@ void menuAddRecord() {
     puts("Запись успешно добавлена");
 };
 
+int isInvalid() {
+    if (products->id <= 0) {
+        puts("Таблица пуста");
+        return 1;
+    }
+    return 0;
+}
+
 void menuUpdateRecord() {
-    plug("Обновление записи");
+    if (isInvalid()) {
+        return;
+    }
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+    // plug("Обновление записи");
+    puts("Введите номер записи");
+    char char_num_of_record[MAX_LENGTH_NAME];
+    fgets(char_num_of_record, sizeof(char_num_of_record), stdin);
+    const int index_of_record = strtol(char_num_of_record, NULL, 10) - 1;
+    char input_string[MAX_LENGTH_NAME];
+    puts("Введите дату");
+    fgets(input_string, sizeof(input_string), stdin);
+    products[index_of_record].date = SplitStringToDate(input_string);
+
+    puts("Введите название компании");
+    fgets(input_string, sizeof(input_string), stdin);
+    input_string[strcspn(input_string, "\n")] = 0; // ЧИСТИМ ТУТ
+    strcpy(products[index_of_record].companyName, input_string);
+
+    puts("Введите название продукта");
+    fgets(input_string, sizeof(input_string), stdin);
+    input_string[strcspn(input_string, "\n")] = 0; // И ТУТ
+    strcpy(products[index_of_record].productName, input_string);
+
+    puts("Введите количество произведенных продуктов");
+    fgets(input_string, sizeof(input_string), stdin);
+    products[index_of_record].productionCount = strtof(input_string, NULL);
+
+    puts("Введите количество продуктов для экспорта");
+    fgets(input_string, sizeof(input_string), stdin);
+    products[index_of_record].exportCount = strtof(input_string, NULL);
+
+    products[index_of_record].percentOfExport = (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
 };
 
 void menuDeleteRecord(const int id_of_deleting_record) {
+    if (isInvalid()) {
+        return;
+    }
     if (id_of_deleting_record > productsCount || id_of_deleting_record < 0) {
         puts("Неверный id");
         return;
@@ -293,6 +329,35 @@ void menuCalcStatistics() {
 };
 
 void menuSaveToFile() {
-    plug("Сохранение в файл");
+    if (isInvalid()) {
+        return;
+    }
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+    char filename[MAX_LENGTH_NAME];
+    fgets(filename, sizeof(filename), stdin);
+    filename[strcspn(filename, "\n")] = 0;
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Ошибка при открытии файла");
+        return;
+    }
+
+    for (int i = 0; i < productsCount; i++) {
+        fprintf(file, "%d;%d.%d.%d;%s;%s;%.2f;%.2f;%.2f\n",
+                products[i].id,
+                products[i].date.day,
+                products[i].date.month,
+                products[i].date.year,
+                products[i].companyName,
+                products[i].productName,
+                products[i].productionCount,
+                products[i].exportCount,
+                products[i].percentOfExport);
+    }
+
+    fclose(file);
+    printf("Данные успешно сохранены в %s\n", filename);
+
 };
 

@@ -4,6 +4,7 @@
 #define MAX_PRODUCTS 1000
 #define MAX_LENGTH_NAME 100
 #define MAX_LENGTH_PRODUCT_NAME 100
+#define COLUMNS_COUNT 6
 
 // Date struct
 typedef struct {
@@ -26,7 +27,8 @@ extern ProductInfo products[MAX_PRODUCTS];
 extern int productsCount;
 
 /**
- * @brief Read from file
+ * @brief This function reed from your file all data and parse in structure
+ * @param filename a name of reading file
  */
 void menuReadFromFile(const char *filename);
 
