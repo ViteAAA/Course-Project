@@ -60,9 +60,14 @@ void plug(char s[50]) {
     getch();
 }
 
-/**
- * @brief Function to add a id
-*/
+int isInvalid() {
+    if (products->id <= 0) {
+        puts("Таблица пуста");
+        return 1;
+    }
+    return 0;
+}
+
 void writeInId(const char *str, const int id_of_prod) {
     char *endPtr;
     products[id_of_prod].id = strtol(str, &endPtr, 10);
@@ -70,9 +75,6 @@ void writeInId(const char *str, const int id_of_prod) {
     // end
 }
 
-/**
- * @brief Function to add a date
-*/
 void writeInDate(const char *str, const int id_of_prod) {
     char *endPtr;
     products[id_of_prod].date.day = strtol(str, &endPtr, 10);
@@ -82,39 +84,24 @@ void writeInDate(const char *str, const int id_of_prod) {
     products[id_of_prod].date.year = strtol(str, &endPtr, 10);
 }
 
-/**
- * @brief Function to add a company name
-*/
 void writeInCompanyName(const char *str, const int id_of_prod) {
     strcpy(products[id_of_prod].companyName, str);
 }
 
-/**
- * @brief Function to add a product name
-*/
 void writeInProductName(const char *str, const int id_of_prod) {
     strcpy(products[id_of_prod].productName, str);
 }
 
-/**
- * @brief Function to add a production count
-*/
 void writeInProductionCount(const char *str, const int id_of_prod) {
     char *endPtr;
     products[id_of_prod].productionCount = strtof(str, &endPtr);
 }
 
-/**
- * @brief Function to add an export count
-*/
 void writeInExportCount(const char *str, const int id_of_prod) {
     char *endPtr;
     products[id_of_prod].exportCount = strtof(str, &endPtr);
 }
 
-/**
- * @brief Function to add a percent of export
-*/
 void writeInPercentOfExport(const int id_of_prod) {
     products[id_of_prod].percentOfExport = products[id_of_prod].exportCount / products[id_of_prod].productionCount * 100;
 }
@@ -230,7 +217,6 @@ void menuAddRecord() {
 
     ProductInfo newProduct;
     char test_str[MAX_LENGTH_NAME];
-    char *endPtr;
     newProduct.id = productsCount + 1;
 
     printf("Введите дату: ");
@@ -262,13 +248,7 @@ void menuAddRecord() {
     puts("Запись успешно добавлена");
 };
 
-int isInvalid() {
-    if (products->id <= 0) {
-        puts("Таблица пуста");
-        return 1;
-    }
-    return 0;
-}
+
 
 void menuUpdateRecord() {
     if (isInvalid()) {
@@ -324,8 +304,85 @@ void menuDeleteRecord(const int id_of_deleting_record) {
     outputInConsole();
 };
 
+void swap(CompanyStat* a, CompanyStat* b) {
+    const CompanyStat tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+// Быстрая сортировка по убыванию
+void quickSort(CompanyStat arr[], const int left, const int right) {
+    if (left >= right) return;
+
+    const float pivot = arr[(left + right) / 2].totalProduction;
+    int i = left, j = right;
+    while (i <= j) {
+        while (arr[i].totalProduction > pivot) i++;      // убывание
+        while (arr[j].totalProduction < pivot) j--;      // убывание
+        if (i <= j) {
+            swap(&arr[i], &arr[j]);
+            i++; j--;
+        }
+    }
+    if (left < j) {
+        quickSort(arr, left, j);
+    }
+    if (i < right) {
+        quickSort(arr, i, right);
+    }
+}
+
+void printBar(const float value, const float max, const int width) {
+    const int barLen = (int)((value / max) * (float)width);
+    for (int i = 0; i < barLen; ++i) {
+        putchar('#');
+    }
+}
+
+void summation(int *uniqueCount, CompanyStat *stats) {
+    // Суммируем productionCount по компаниям
+    for (int i = 0; i < productsCount; ++i) {
+        int idx = -1;
+        for (int j = 0; j < *uniqueCount; ++j) {
+            if (strcmp(stats[j].companyName, products[i].companyName) == 0) {
+                idx = j;
+                break;
+            }
+        }
+        if (idx == -1) {
+            // Новая компания
+            strcpy(stats[*uniqueCount].companyName, products[i].companyName);
+            stats[*uniqueCount].totalProduction = products[i].productionCount;
+            *uniqueCount += 1;
+        } else {
+            // Уже есть компания — плюсуем
+            stats[idx].totalProduction += products[i].productionCount;
+        }
+    }
+}
+
 void menuCalcStatistics() {
-    plug("Статистика");
+    CompanyStat stats[MAX_PRODUCTS];
+    int uniqueCount = 0;
+
+    quickSort(stats, 0, uniqueCount - 1);
+
+    summation(&uniqueCount, stats);
+
+    // Найдём максимум для масштабирования бара
+    float maxProd = 0;
+    for (int i = 0; i < uniqueCount; ++i) {
+        if (stats[i].totalProduction > maxProd) maxProd = stats[i].totalProduction;
+    }
+
+
+    // График
+    printf("Статистика производства по компаниям:\n\n");
+    for (int i = 0; i < uniqueCount; ++i) {
+        printf("%-20s | ", stats[i].companyName);
+        printBar(stats[i].totalProduction, maxProd, 40); // 40 символов ширина бара
+        printf(" (%.2f)\n", stats[i].totalProduction);
+    }
 };
 
 void menuSaveToFile() {

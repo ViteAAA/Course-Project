@@ -9,7 +9,7 @@
 
 char filename[MAX_LENGTH_PRODUCT_NAME + 3];
 
-void inputFilename() {
+static void inputFilename() {
     strcpy(filename, "../");
     char non_formated_filename[MAX_LENGTH_NAME];
     printf("Введите имя файла: ");
@@ -17,7 +17,7 @@ void inputFilename() {
     strcat(filename, non_formated_filename);
 }
 
-void menuPrintOptions() {
+static void menuPrintOptions() {
     HANDLE *const hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, 10);
     printf("Выберите пункт меню:\n");
@@ -32,14 +32,14 @@ void menuPrintOptions() {
     printf("7. Сохранение в файл\n");
 }
 
-void dialogDeleteRecord() {
+static void dialogDeleteRecord() {
     printf("Введите номер записи для удаления: ");
     int recordNumber;
     scanf("%d", &recordNumber);
     menuDeleteRecord(recordNumber - 1);
 }
 
-void dialogReadFromFile() {
+static void dialogReadFromFile() {
     inputFilename();
     menuReadFromFile(filename);
 }
