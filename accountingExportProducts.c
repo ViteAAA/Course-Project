@@ -53,12 +53,6 @@ ProductDate SplitStringToDate(const char *str) {
 
 
 
-void plug(char s[50]) {
-    puts(s);
-    puts("Â äàííûé ìîìåíò íåò ôóíêöèè ÷òåíèÿ èç ôàéëà, íàæìèòå Enter äëÿ ïğîäîëæåíèÿ\n");
-    // Ñåé÷àñ, ÷òîáû ñğàçó íå âûñêàêèâàëà òàáëè÷êà
-    getch();
-}
 
 int isInvalid() {
     if (products->id <= 0) {

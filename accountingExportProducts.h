@@ -52,40 +52,12 @@ void menuAddRecord();
  */
 void menuUpdateRecord();
 
-/**
- * @brief Function to add a id
-*/
-void writeInId(const char *str, int id_of_prod);
 
 /**
  * @brief Delete record
  */
 void menuDeleteRecord(int id_of_deleting_record);
 
-/**
- * @brief Function to add a date
-*/
-void writeInDate(const char *str, int id_of_prod);
-
-/**
- * @brief Function to add a company name
-*/
-void writeInCompanyName(const char *str, int id_of_prod);
-
-/**
- * @brief Function to add a product name
-*/
-void writeInProductName(const char *str, int id_of_prod);
-
-/**
- * @brief Function to add a production count
-*/
-void writeInProductionCount(const char *str, int id_of_prod);
-
-/**
- * @brief Function to add an export count
-*/
-void writeInExportCount(const char *str, int id_of_prod);
 
 /**
  * @brief Statistics
