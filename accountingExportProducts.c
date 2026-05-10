@@ -155,7 +155,7 @@ void splitInfo(const char *str) {
         }
     }
     productsCount = count_of_prods - 1;
-    outputInConsole();
+    // outputInConsole();
 }
 
 
@@ -301,7 +301,7 @@ void menuDeleteRecord(const int id_of_deleting_record) {
     }
     productsCount--;
 
-    outputInConsole();
+    // outputInConsole();
 };
 
 void swap(CompanyStat* a, CompanyStat* b) {
