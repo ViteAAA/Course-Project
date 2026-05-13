@@ -44,23 +44,67 @@ void outputInConsoleOneProd(ProductInfo prod) {
 }
 
 ProductDate SplitStringToDate(const char *str) {
-    return (ProductDate) {
-        .day = strtol(str, NULL, 10),
-        .month = strtol(str + 3, NULL, 10),
-        .year = strtol(str + 6, NULL, 10)
-    };
+    // Если строка пустая, возвращаем нулевую дату
+    if (str == NULL || *str == '\0') {
+        return (ProductDate){0, 0, 0};
+    }
+
+    char *next_ptr;
+    ProductDate date;
+
+    // 1. Читаем день. next_ptr указывает на символ СРАЗУ после числа (на точку/слэш)
+    date.day = (int)strtol(str, &next_ptr, 10);
+
+    // Если символ после числа — разделитель, пропускаем его (+1)
+    if (*next_ptr == '.' || *next_ptr == '/' || *next_ptr == '-') {
+        next_ptr++;
+    }
+
+    // 2. Читаем месяц. next_ptr сдвигается на символ после месяца
+    date.month = (int)strtol(next_ptr, &next_ptr, 10);
+
+    // Снова пропускаем разделитель (+1), если он есть
+    if (*next_ptr == '.' || *next_ptr == '/' || *next_ptr == '-') {
+        next_ptr++;
+    }
+
+    // 3. Читаем год. Последний аргумент NULL, так как дальше читать не нужно
+    date.year = (int)strtol(next_ptr, NULL, 10);
+
+
+    return date;
 }
 
-
-
-
+/**
+ * @brief Function to check if table is empty
+ * @return boolean if invalid
+ */
 int isInvalid() {
-    if (products->id <= 0) {
+    if (productsCount == 0) {
         puts("Таблица пуста");
         return 1;
     }
     return 0;
 }
+
+/**
+ * @brief Function to check if date is valid
+ * @param date date to check
+ * @return boolean
+ */
+int validDate(const ProductDate *date) {
+    const int days_in_months[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (date->day <= 0 || date->month <= 0 || date->year <= 0) {
+        return 0;
+    }
+    if (days_in_months[date->month] != date->day) {
+        return 0;
+    }
+
+
+    return 1;
+}
+
 
 void writeInId(const char *str, const int id_of_prod) {
     char *endPtr;
@@ -69,13 +113,17 @@ void writeInId(const char *str, const int id_of_prod) {
     // end
 }
 
-void writeInDate(const char *str, const int id_of_prod) {
-    char *endPtr;
-    products[id_of_prod].date.day = strtol(str, &endPtr, 10);
-    str += 2;
-    products[id_of_prod].date.month = strtol(str, &endPtr, 10);
-    str += 2;
-    products[id_of_prod].date.year = strtol(str, &endPtr, 10);
+void writeInDate(const char *str, const int id_of_prod, int *exit) {
+
+    products[id_of_prod].date = SplitStringToDate(str);
+    if (!validDate(&products[id_of_prod].date)) {
+        products[id_of_prod].date.day = 0;
+        products[id_of_prod].date.month = 0;
+        products[id_of_prod].date.year = 0;
+        *exit = 0;
+        puts("Не верная дата, введите снова");
+    }
+
 }
 
 void writeInCompanyName(const char *str, const int id_of_prod) {
@@ -107,6 +155,7 @@ void splitInfo(const char *str) {
     int type_of_convert = 0;
     int count_of_prods = 0;
     char record[strlen(str)];
+    int exit = 1;
     int j = 0;
     for (int i = 0; i < strlen(str); i++) {
         if (str[i] == ';') {
@@ -116,7 +165,7 @@ void splitInfo(const char *str) {
                     writeInId(record, count_of_prods);
                     break;
                 case 1:
-                    writeInDate(record, count_of_prods);
+                    writeInDate(record, count_of_prods, &exit);
                     break;
                 case 2:
                     writeInCompanyName(record, count_of_prods);
@@ -138,6 +187,7 @@ void splitInfo(const char *str) {
             strcpy(record, "");
             j = 0;
         }
+
         else if (str[i] == '\n') {
             count_of_prods++;
             type_of_convert = 0;
@@ -146,6 +196,11 @@ void splitInfo(const char *str) {
         else {
             record[j] = str[i];
             j++;
+        }
+        if (!exit) {
+            puts("В структуру попали не верные данные, структура будет очищена");
+            productsCount = 0;
+            return;
         }
     }
     productsCount = count_of_prods - 1;
@@ -175,10 +230,10 @@ void menuReadFromFile(const char *filename) {
 };
 
 void menuPrintTable() {
-    if (products[0].id == 0) {
-        puts("Таблица пуста");
+    if (isInvalid()) {
         return;
     }
+
     // Печатаем заголовок таблицы (один раз перед циклом, если у тебя массив)
     printf("| %-3s | %-10s | %-30s | %-30s | %-30s | %-30s | %-25s|\n",
            "ID", "Дата", "Наименование предприятия", "Наименование изделия", "Выпущено, млн.р.", "В том числе на экспорт, млн.р.", "Доля экспорта в доходе, %");
@@ -304,7 +359,6 @@ void swap(CompanyStat* a, CompanyStat* b) {
     *b = tmp;
 }
 
-// Быстрая сортировка по убыванию
 void quickSort(CompanyStat arr[], const int left, const int right) {
     if (left >= right) return;
 
