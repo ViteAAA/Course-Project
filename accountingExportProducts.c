@@ -87,6 +87,30 @@ int isInvalid() {
     return 0;
 }
 
+int ValidateProductionAndExport(const float *production, const float *exportCount) {
+    if (*production <= 0) {
+        return 0;
+    }
+    if (*exportCount < 0) {
+        return 0;
+    }
+    if (*exportCount > *production) {
+        return 0;
+    }
+    return 1;
+}
+
+void validName(char *str) {
+    fgets(str, sizeof(str), stdin);
+    str[strcspn(str, "\n")] = 0;
+    if (strlen(str) > MAX_LENGTH_NAME || strlen(str) == 0) {
+        puts("Слишком длинное строка");
+        validName(str);
+    }
+
+}
+
+
 /**
  * @brief Function to check if date is valid
  * @param date date to check
@@ -97,7 +121,7 @@ int validDate(const ProductDate *date) {
     if (date->day <= 0 || date->month <= 0 || date->year <= 0) {
         return 0;
     }
-    if (days_in_months[date->month] != date->day) {
+    if (days_in_months[date->month] < date->day) {
         return 0;
     }
 
@@ -264,35 +288,62 @@ void menuAddRecord() {
 
     while (getchar() != '\n' && getchar() != EOF) {}
 
-    ProductInfo newProduct;
+    ProductInfo newProduct = {
+        .id = 0,
+        .date = {
+            .day = 0,
+            .month = 0,
+            .year = 0,
+        },
+        .companyName = "",
+        .productName = "",
+        .productionCount = 0,
+        .exportCount = 0,
+        .percentOfExport = 0
+    };
     char test_str[MAX_LENGTH_NAME];
     newProduct.id = productsCount + 1;
 
-    printf("Введите дату: ");
-    fgets(test_str, sizeof(test_str), stdin);
-    newProduct.date = SplitStringToDate(test_str);
+    int exit = 1;
+    while (exit) {
+        printf("Введите дату: ");
+        fgets(test_str, sizeof(test_str), stdin);
+        newProduct.date = SplitStringToDate(test_str);
+        if (validDate(&newProduct.date)) {
+            exit = 0;
+        }
+        printf("\n");
+    }
 
     printf("Введите название компании: ");
-    fgets(test_str, sizeof(test_str), stdin);
-    test_str[strcspn(test_str, "\n")] = '\0';
+    validName(test_str);
     strcpy(newProduct.companyName, test_str);
 
     printf("Введите название продукта: ");
-    fgets(test_str, sizeof(test_str), stdin);
-    test_str[strcspn(test_str, "\n")] = '\0';
+    validName(test_str);
     strcpy(newProduct.productName, test_str);
 
-    printf("Введите количество произведенного товара, млн.р: ");
-    fgets(test_str, sizeof(test_str), stdin);
-    newProduct.productionCount = strtof(test_str, NULL);
+    exit = 1;
+    while (exit) {
+        printf("Введите количество произведенного товара, млн.р: ");
+        fgets(test_str, sizeof(test_str), stdin);
+        newProduct.productionCount = strtof(test_str, NULL);
 
-    printf("Введите количество товара, отправленного на экспорт, млн.р: ");
-    fgets(test_str, sizeof(test_str), stdin);
-    newProduct.exportCount = strtof(test_str, NULL);
+        printf("Введите количество товара, отправленного на экспорт, млн.р: ");
+        fgets(test_str, sizeof(test_str), stdin);
+        newProduct.exportCount = strtof(test_str, NULL);
 
-    newProduct.percentOfExport = (newProduct.exportCount / newProduct.productionCount) * 100;
 
-    outputInConsoleOneProd(newProduct);
+
+        if (ValidateProductionAndExport(&newProduct.productionCount, &newProduct.exportCount)) {
+            newProduct.percentOfExport = (newProduct.exportCount / newProduct.productionCount) * 100;
+            exit = 0;
+        }
+        else {
+            puts("Ошибка ввода: проверьте корректность данных (экспорт не может превышать производство).");
+        }
+    }
+    // outputInConsoleOneProd(newProduct);
     products[productsCount++] = newProduct;
     puts("Запись успешно добавлена");
 };
@@ -312,28 +363,40 @@ void menuUpdateRecord() {
     const int index_of_record = strtol(char_num_of_record, NULL, 10) - 1;
     char input_string[MAX_LENGTH_NAME];
     puts("Введите дату");
-    fgets(input_string, sizeof(input_string), stdin);
-    products[index_of_record].date = SplitStringToDate(input_string);
+    int exit = 1;
+    while (exit) {
+        fgets(input_string, sizeof(input_string), stdin);
+        writeInDate(input_string, index_of_record, &exit);
+    }
 
     puts("Введите название компании");
-    fgets(input_string, sizeof(input_string), stdin);
-    input_string[strcspn(input_string, "\n")] = 0; // ЧИСТИМ ТУТ
+    validName(input_string);
     strcpy(products[index_of_record].companyName, input_string);
 
     puts("Введите название продукта");
-    fgets(input_string, sizeof(input_string), stdin);
-    input_string[strcspn(input_string, "\n")] = 0; // И ТУТ
+    validName(input_string);
     strcpy(products[index_of_record].productName, input_string);
 
-    puts("Введите количество произведенных продуктов");
-    fgets(input_string, sizeof(input_string), stdin);
-    products[index_of_record].productionCount = strtof(input_string, NULL);
+    exit = 0;
+    while (exit) {
 
-    puts("Введите количество продуктов для экспорта");
-    fgets(input_string, sizeof(input_string), stdin);
-    products[index_of_record].exportCount = strtof(input_string, NULL);
+        puts("Введите количество произведенных продуктов");
+        fgets(input_string, sizeof(input_string), stdin);
+        products[index_of_record].productionCount = strtof(input_string, NULL);
 
-    products[index_of_record].percentOfExport = (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
+        puts("Введите количество продуктов для экспорта");
+        fgets(input_string, sizeof(input_string), stdin);
+        products[index_of_record].exportCount = strtof(input_string, NULL);
+
+        if (ValidateProductionAndExport(&products[index_of_record].productionCount, &products[index_of_record].exportCount)) {
+            exit = 0;
+            products[index_of_record].percentOfExport = (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
+        }
+        else {
+            puts("Ошибка ввода: проверьте корректность данных.");
+        }
+
+    }
 };
 
 void menuDeleteRecord(const int id_of_deleting_record) {
