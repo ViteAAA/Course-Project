@@ -4,7 +4,9 @@
     <file url="file://$PROJECT_DIR$/CMakeLists.txt" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/accountingExportProducts.c" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/accountingExportProducts.h" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/cmake-build-debug/new_file.csv" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/cmake-build-debug/new_file.txt" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/data.csv" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/data/data.csv" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/main.c" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/my_file.txt" charset="windows-1251" />

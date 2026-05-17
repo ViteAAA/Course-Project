@@ -1,12 +1,17 @@
 #include "accountingExportProducts.h"
 
 #include <stdio.h>
-#include <conio.h>
+// #include <conio.h>
 #include <stdlib.h>
 #include <string.h>
 
 ProductInfo products[MAX_PRODUCTS];
 int productsCount;
+
+
+CompanyStat statistics[MAX_PRODUCTS];
+int statisticsCount;
+
 
 void outputInConsole() {
     for (int i = 0; i < productsCount; i++) {
@@ -26,6 +31,7 @@ void outputInConsole() {
         printf("}\n");
     }
 }
+
 void outputInConsoleOneProd(ProductInfo prod) {
     printf("{\n");
     printf("  \"id\": %d,\n", prod.id);
@@ -53,7 +59,7 @@ ProductDate SplitStringToDate(const char *str) {
     ProductDate date;
 
     // 1. Читаем день. next_ptr указывает на символ СРАЗУ после числа (на точку/слэш)
-    date.day = (int)strtol(str, &next_ptr, 10);
+    date.day = (int) strtol(str, &next_ptr, 10);
 
     // Если символ после числа — разделитель, пропускаем его (+1)
     if (*next_ptr == '.' || *next_ptr == '/' || *next_ptr == '-') {
@@ -61,7 +67,7 @@ ProductDate SplitStringToDate(const char *str) {
     }
 
     // 2. Читаем месяц. next_ptr сдвигается на символ после месяца
-    date.month = (int)strtol(next_ptr, &next_ptr, 10);
+    date.month = (int) strtol(next_ptr, &next_ptr, 10);
 
     // Снова пропускаем разделитель (+1), если он есть
     if (*next_ptr == '.' || *next_ptr == '/' || *next_ptr == '-') {
@@ -69,7 +75,7 @@ ProductDate SplitStringToDate(const char *str) {
     }
 
     // 3. Читаем год. Последний аргумент NULL, так как дальше читать не нужно
-    date.year = (int)strtol(next_ptr, NULL, 10);
+    date.year = (int) strtol(next_ptr, NULL, 10);
 
 
     return date;
@@ -107,7 +113,6 @@ void validName(char *str) {
         puts("Слишком длинное строка");
         validName(str);
     }
-
 }
 
 
@@ -116,12 +121,13 @@ void validName(char *str) {
  * @param date date to check
  * @return boolean
  */
-int validDate(const ProductDate *date) {
+int isValidDate(const ProductDate *date) {
     const int days_in_months[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     if (date->day <= 0 || date->month <= 0 || date->year <= 0) {
         return 0;
     }
     if (days_in_months[date->month] < date->day) {
+        printf("%d", days_in_months[date->month]);
         return 0;
     }
 
@@ -138,16 +144,14 @@ void writeInId(const char *str, const int id_of_prod) {
 }
 
 void writeInDate(const char *str, const int id_of_prod, int *exit) {
-
     products[id_of_prod].date = SplitStringToDate(str);
-    if (!validDate(&products[id_of_prod].date)) {
+    if (!isValidDate(&products[id_of_prod].date)) {
         products[id_of_prod].date.day = 0;
         products[id_of_prod].date.month = 0;
         products[id_of_prod].date.year = 0;
         *exit = 0;
         puts("Не верная дата, введите снова");
     }
-
 }
 
 void writeInCompanyName(const char *str, const int id_of_prod) {
@@ -169,11 +173,13 @@ void writeInExportCount(const char *str, const int id_of_prod) {
 }
 
 void writeInPercentOfExport(const int id_of_prod) {
-    products[id_of_prod].percentOfExport = products[id_of_prod].exportCount / products[id_of_prod].productionCount * 100;
+    products[id_of_prod].percentOfExport = products[id_of_prod].exportCount / products[id_of_prod].productionCount *
+                                           100;
 }
 
 /**
  * @brief Function to split info into a struct
+ * @param str String to split
 */
 void splitInfo(const char *str) {
     int type_of_convert = 0;
@@ -210,14 +216,105 @@ void splitInfo(const char *str) {
             type_of_convert++;
             strcpy(record, "");
             j = 0;
-        }
-
-        else if (str[i] == '\n') {
+        } else if (str[i] == '\n') {
+            record[j] = '\0';
+            switch (type_of_convert) {
+                case 0:
+                    writeInId(record, count_of_prods);
+                    break;
+                case 1: writeInDate(record, count_of_prods, &exit);
+                    break;
+                case 2: writeInCompanyName(record, count_of_prods);
+                    break;
+                case 3: writeInProductName(record, count_of_prods);
+                    break;
+                case 4: writeInProductionCount(record, count_of_prods);
+                    break;
+                case 5:
+                    writeInExportCount(record, count_of_prods);
+                    writeInPercentOfExport(count_of_prods);
+                    break;
+                default:
+                    break;
+            }
             count_of_prods++;
             type_of_convert = 0;
             strcpy(record, "");
+            j = 0;
+        } else {
+            record[j] = str[i];
+            j++;
         }
-        else {
+        if (!exit) {
+            puts("В структуру попали не верные данные, структура будет очищена");
+            productsCount = 0;
+            return;
+        }
+    }
+    productsCount = count_of_prods - 1;
+    // outputInConsole();
+}
+
+void splitInfoLine(const char *str) {
+    int type_of_convert = 0;
+    int count_of_prods = 0;
+    char record[strlen(str)];
+    int exit = 1;
+    int j = 0;
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == ';') {
+            record[j] = '\0';
+            switch (type_of_convert) {
+                case 0:
+                    writeInId(record, count_of_prods);
+                    break;
+                case 1:
+                    writeInDate(record, count_of_prods, &exit);
+                    break;
+                case 2:
+                    writeInCompanyName(record, count_of_prods);
+                    break;
+                case 3:
+                    writeInProductName(record, count_of_prods);
+                    break;
+                case 4:
+                    writeInProductionCount(record, count_of_prods);
+                    break;
+                case 5:
+                    writeInExportCount(record, count_of_prods);
+                    writeInPercentOfExport(count_of_prods);
+                    break;
+                default:
+                    break;
+            }
+            type_of_convert++;
+            strcpy(record, "");
+            j = 0;
+        } else if (str[i] == '\n') {
+            record[j] = '\0';
+            switch (type_of_convert) {
+                case 0:
+                    writeInId(record, count_of_prods);
+                    break;
+                case 1: writeInDate(record, count_of_prods, &exit);
+                    break;
+                case 2: writeInCompanyName(record, count_of_prods);
+                    break;
+                case 3: writeInProductName(record, count_of_prods);
+                    break;
+                case 4: writeInProductionCount(record, count_of_prods);
+                    break;
+                case 5:
+                    writeInExportCount(record, count_of_prods);
+                    writeInPercentOfExport(count_of_prods);
+                    break;
+                default:
+                    break;
+            }
+            count_of_prods++;
+            type_of_convert = 0;
+            strcpy(record, "");
+        } else {
             record[j] = str[i];
             j++;
         }
@@ -234,24 +331,25 @@ void splitInfo(const char *str) {
 
 void menuReadFromFile(const char *filename) {
     // plug("Чтение из файла");
-    FILE* in = fopen(filename, "r");
+    FILE *in = fopen(filename, "r");
     if (in == NULL) {
         return;
     }
     fseek(in, 0, SEEK_END);
 
-    const int capacity = (int)ftell(in);
+    const int capacity = (int) ftell(in);
     char *buff = malloc(capacity + 1);
     fseek(in, 0, SEEK_SET);
 
 
+
     const size_t bytes_read = fread(buff, 1, capacity, in);
     buff[bytes_read] = '\0';
-    splitInfo(buff);
+    const char *new_buff = strchr(buff, '\n')  + 1;
+    splitInfo(new_buff);
     free(buff);
     fclose(in);
-
-};
+}
 
 void menuPrintTable() {
     if (isInvalid()) {
@@ -260,8 +358,10 @@ void menuPrintTable() {
 
     // Печатаем заголовок таблицы (один раз перед циклом, если у тебя массив)
     printf("| %-3s | %-10s | %-30s | %-30s | %-30s | %-30s | %-25s|\n",
-           "ID", "Дата", "Наименование предприятия", "Наименование изделия", "Выпущено, млн.р.", "В том числе на экспорт, млн.р.", "Доля экспорта в доходе, %");
-    printf("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+           "ID", "Дата", "Наименование предприятия", "Наименование изделия", "Выпущено, млн.р.",
+           "В том числе на экспорт, млн.р.", "Доля экспорта в доходе, %");
+    printf(
+        "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
     // Печать строки данных
     for (int i = 0; i < productsCount; i++) {
@@ -274,7 +374,8 @@ void menuPrintTable() {
                products[i].exportCount,
                products[i].percentOfExport);
     }
-    printf("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf(
+        "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 };
 
 
@@ -286,7 +387,9 @@ void menuAddRecord() {
     }
     puts("Добавление записи:");
 
-    while (getchar() != '\n' && getchar() != EOF) {}
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+    }
 
     ProductInfo newProduct = {
         .id = 0,
@@ -309,7 +412,7 @@ void menuAddRecord() {
         printf("Введите дату: ");
         fgets(test_str, sizeof(test_str), stdin);
         newProduct.date = SplitStringToDate(test_str);
-        if (validDate(&newProduct.date)) {
+        if (isValidDate(&newProduct.date)) {
             exit = 0;
         }
         printf("\n");
@@ -334,12 +437,10 @@ void menuAddRecord() {
         newProduct.exportCount = strtof(test_str, NULL);
 
 
-
         if (ValidateProductionAndExport(&newProduct.productionCount, &newProduct.exportCount)) {
             newProduct.percentOfExport = (newProduct.exportCount / newProduct.productionCount) * 100;
             exit = 0;
-        }
-        else {
+        } else {
             puts("Ошибка ввода: проверьте корректность данных (экспорт не может превышать производство).");
         }
     }
@@ -349,13 +450,13 @@ void menuAddRecord() {
 };
 
 
-
 void menuUpdateRecord() {
     if (isInvalid()) {
         return;
     }
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
+    while ((c = getchar()) != '\n' && c != EOF) {
+    }
     // plug("Обновление записи");
     puts("Введите номер записи");
     char char_num_of_record[MAX_LENGTH_NAME];
@@ -379,7 +480,6 @@ void menuUpdateRecord() {
 
     exit = 0;
     while (exit) {
-
         puts("Введите количество произведенных продуктов");
         fgets(input_string, sizeof(input_string), stdin);
         products[index_of_record].productionCount = strtof(input_string, NULL);
@@ -388,14 +488,14 @@ void menuUpdateRecord() {
         fgets(input_string, sizeof(input_string), stdin);
         products[index_of_record].exportCount = strtof(input_string, NULL);
 
-        if (ValidateProductionAndExport(&products[index_of_record].productionCount, &products[index_of_record].exportCount)) {
+        if (ValidateProductionAndExport(&products[index_of_record].productionCount,
+                                        &products[index_of_record].exportCount)) {
             exit = 0;
-            products[index_of_record].percentOfExport = (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
-        }
-        else {
+            products[index_of_record].percentOfExport =
+                    (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
+        } else {
             puts("Ошибка ввода: проверьте корректность данных.");
         }
-
     }
 };
 
@@ -414,118 +514,221 @@ void menuDeleteRecord(const int id_of_deleting_record) {
     productsCount--;
 
     // outputInConsole();
-};
+}
 
-void swap(CompanyStat* a, CompanyStat* b) {
+void swap(CompanyStat *a, CompanyStat *b) {
     const CompanyStat tmp = *a;
     *a = *b;
     *b = tmp;
 }
 
-void quickSort(CompanyStat arr[], const int left, const int right) {
+void merge(CompanyStat arr[], const int left, const int mid, const int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    // Создаем временные массивы для левой и правой половин
+    CompanyStat *L = (CompanyStat*)malloc(n1 * sizeof(CompanyStat));
+    CompanyStat *R = (CompanyStat*)malloc(n2 * sizeof(CompanyStat));
+
+    // Копируем данные во временные массивы
+    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+
+    // Слияние элементов обратно в arr[]
+    while (i < n1 && j < n2) {
+        // strcmp(a, b) < 0 означает, что строка 'a' идет раньше 'b' в алфавите
+        if (strcmp(L[i].companyName, R[j].companyName) <= 0) {
+            arr[k] = L[i];
+            i++;
+        } else {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    // Копируем оставшиеся элементы левого массива, если они есть
+    while (i < n1) {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+
+    // Копируем оставшиеся элементы правого массива, если они есть
+    while (j < n2) {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+
+    // Освобождаем выделенную временную память
+    free(L);
+    free(R);
+}
+
+// Основная рекурсивная функция сортировки слиянием
+void mergeSort(CompanyStat arr[], const int left, const int right) {
     if (left >= right) return;
 
-    const float pivot = arr[(left + right) / 2].totalProduction;
-    int i = left, j = right;
-    while (i <= j) {
-        while (arr[i].totalProduction > pivot) i++;      // убывание
-        while (arr[j].totalProduction < pivot) j--;      // убывание
-        if (i <= j) {
-            swap(&arr[i], &arr[j]);
-            i++; j--;
-        }
-    }
-    if (left < j) {
-        quickSort(arr, left, j);
-    }
-    if (i < right) {
-        quickSort(arr, i, right);
-    }
+    // Находим середину массива
+    const int mid = left + (right - left) / 2;
+
+    // Сортируем первую и вторую половины
+    mergeSort(arr, left, mid);
+    mergeSort(arr, mid + 1, right);
+
+    // Объединяем отсортированные половины
+    merge(arr, left, mid, right);
 }
 
 void printBar(const float value, const float max, const int width) {
-    const int barLen = (int)((value / max) * (float)width);
+    const int barLen = (int) ((value / max) * (float) width);
     for (int i = 0; i < barLen; ++i) {
         putchar('#');
     }
 }
 
 void summation(int *uniqueCount, CompanyStat *stats) {
-    // Суммируем productionCount по компаниям
+    *uniqueCount = 0; // Обнуляем счетчик перед началом сборки данных
+
+    // Временные массивы для накопления физических объемов
+    float totalProduction[MAX_PRODUCTS] = {0};
+    float totalExport[MAX_PRODUCTS] = {0};
+
     for (int i = 0; i < productsCount; ++i) {
         int idx = -1;
+
+        // Ищем, добавляли ли мы уже эту компанию в stats
         for (int j = 0; j < *uniqueCount; ++j) {
             if (strcmp(stats[j].companyName, products[i].companyName) == 0) {
                 idx = j;
                 break;
             }
         }
+
         if (idx == -1) {
-            // Новая компания
+            // Защита от переполнения локальных массивов и stats
+            if (*uniqueCount >= MAX_PRODUCTS) {
+                break;
+            }
+
+            // Регистрируем новую компанию в stats
             strcpy(stats[*uniqueCount].companyName, products[i].companyName);
-            stats[*uniqueCount].totalProduction = products[i].productionCount;
+
+            // Начинаем копить суммы в параллельных массивах под тем же индексом
+            totalProduction[*uniqueCount] = products[i].productionCount;
+            totalExport[*uniqueCount] = products[i].exportCount;
+
             *uniqueCount += 1;
         } else {
-            // Уже есть компания — плюсуем
-            stats[idx].totalProduction += products[i].productionCount;
+            // Компания уже есть — суммируем её показатели в параллельные массивы
+            totalProduction[idx] += products[i].productionCount;
+            totalExport[idx] += products[i].exportCount;
         }
     }
+
+    // ВТОРОЙ ЭТАП: Считаем процент доли экспорта для каждой уникальной компании
+    for (int i = 0; i < *uniqueCount; ++i) {
+        if (totalProduction[i] > 0.0f) {
+            // Формула: (общий экспорт / общее производство) * 100
+            stats[i].percentOfExport = (totalExport[i] / totalProduction[i]) * 100.0f;
+        } else {
+            // Защита от деления на ноль, если производство равно 0
+            stats[i].percentOfExport = 0.0f;
+        }
+    }
+}
+
+
+
+/**
+ * @brief Function creat export dependence chart for the company
+ * @param count count of all necessary companies
+ * @param stats struct of companies
+ * @param maxProd max share of export for build graph
+ */
+void printGraph(const int count, CompanyStat *stats, const float maxProd) {
+    for (int i = 0; i < count; ++i) {
+        printf("%-20s | ", stats[i].companyName);
+        printBar(stats[i].percentOfExport, maxProd, 40); // 40 символов ширина бара
+        printf(" (%.2f)\n", stats[i].percentOfExport);
+    }
+}
+
+void printTableFromGraph(const int count, CompanyStat *stats) {
+    printf("Статистика производства по компаниям:\n\n");
+    if (stats == NULL || count <= 0) {
+        printf("Данные для отображения отсутствуют.\n");
+        return;
+    }
+
+    // Печать шапки таблицы
+    // -30 — левое выравнивание, 30 символов под имя
+    // 25 — правое выравнивание, 25 символов под процент
+    printf("\n%s\n", "---------------------------------------------------------");
+    printf("| %-30s | %20s |\n", "Наименование предприятия", "Доля экспорта в %");
+    printf("%s\n", "---------------------------------------------------------");
+
+    // Печать строк таблицы
+    for (int i = 0; i < count; i++) {
+        // %.1f%% выведет число с одним знаком после запятой и добавит знак %
+        printf("| %-30s | %19.1f%% |\n", stats[i].companyName, stats[i].percentOfExport);
+    }
+
+    printf("%s\n", "---------------------------------------------------------");
 }
 
 void menuCalcStatistics() {
     CompanyStat stats[MAX_PRODUCTS];
     int uniqueCount = 0;
-
-    quickSort(stats, 0, uniqueCount - 1);
-
     summation(&uniqueCount, stats);
+
+    mergeSort(stats, 0, uniqueCount - 1);
+
 
     // Найдём максимум для масштабирования бара
     float maxProd = 0;
     for (int i = 0; i < uniqueCount; ++i) {
-        if (stats[i].totalProduction > maxProd) maxProd = stats[i].totalProduction;
+        if (stats[i].percentOfExport > maxProd) maxProd = stats[i].percentOfExport;
     }
 
+    printTableFromGraph(uniqueCount, stats);
 
+    printGraph(uniqueCount, stats, maxProd);
     // График
-    printf("Статистика производства по компаниям:\n\n");
-    for (int i = 0; i < uniqueCount; ++i) {
-        printf("%-20s | ", stats[i].companyName);
-        printBar(stats[i].totalProduction, maxProd, 40); // 40 символов ширина бара
-        printf(" (%.2f)\n", stats[i].totalProduction);
+    for (int i = 0; i < uniqueCount; i++) {
+        strcpy(statistics[i].companyName, stats[i].companyName);
+        statistics[i].percentOfExport = stats[i].percentOfExport;
     }
-};
+}
 
-void menuSaveToFile() {
-    if (isInvalid()) {
+void saveStruct(FILE *file) {
+    for (int i = 0; i < productsCount; i++) {
+        fprintf(file, "%s;%f\n",
+                products[i].companyName,
+                products[i].percentOfExport);
+    }
+
+}
+
+void menuSaveToFile(const char *filename) {
+    if (statisticsCount == 0) {
+        puts("Вначале выполните расчет");
         return;
     }
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
-    char filename[MAX_LENGTH_NAME];
-    fgets(filename, sizeof(filename), stdin);
-    filename[strcspn(filename, "\n")] = 0;
+    while ((c = getchar()) != '\n' && c != EOF) {
+    }
+
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("Ошибка при открытии файла");
         return;
     }
-
-    for (int i = 0; i < productsCount; i++) {
-        fprintf(file, "%d;%d.%d.%d;%s;%s;%.2f;%.2f;%.2f\n",
-                products[i].id,
-                products[i].date.day,
-                products[i].date.month,
-                products[i].date.year,
-                products[i].companyName,
-                products[i].productName,
-                products[i].productionCount,
-                products[i].exportCount,
-                products[i].percentOfExport);
-    }
+    saveStruct(file);
 
     fclose(file);
     printf("Данные успешно сохранены в %s\n", filename);
-
-};
-
+}

@@ -81,3 +81,10 @@ void menuDeleteRecord();
 void menuCalcStatistics();
 void menuSaveToFile();
 ```
+# Источники (минимум)
+
+1. Методичка
+2. _github_ Ястребова
+3. Книга по _C_
+4. _CSV_ что такое
+5. _Excel_ от _Microsoft_

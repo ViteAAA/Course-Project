@@ -9,8 +9,12 @@
 
 char filename[MAX_LENGTH_PRODUCT_NAME + 3];
 
-static void inputFilename() {
-    strcpy(filename, "../");
+static void inputFilename(const char type) {
+    if (type == 'r') {
+        strcpy(filename, "../data/");
+    } else {
+        strcpy(filename, "../data/results/");
+    }
     char non_formated_filename[MAX_LENGTH_NAME];
     printf("ֲגוהטעו טלÿ פאיכא: ");
     scanf("%s", non_formated_filename);
@@ -40,8 +44,13 @@ static void dialogDeleteRecord() {
 }
 
 static void dialogReadFromFile() {
-    inputFilename();
+    inputFilename('r');
     menuReadFromFile(filename);
+}
+
+static void dialogSaveToFile() {
+    inputFilename('s');
+    menuSaveToFile(filename);
 }
 
 
@@ -78,7 +87,7 @@ int main() {
                 menuCalcStatistics();
                 break;
             case 7:
-                menuSaveToFile();
+                dialogSaveToFile();
                 break;
             default:
                 break;

@@ -25,11 +25,14 @@ typedef struct {
 
 typedef struct {
     char companyName[MAX_LENGTH_NAME];
-    float totalProduction;
+    float percentOfExport;
 } CompanyStat;
 
 extern ProductInfo products[MAX_PRODUCTS];
 extern int productsCount;
+
+extern CompanyStat statistics[MAX_PRODUCTS];
+extern int statisticsCount;
 
 /**
  * @brief This function reed from your file all data and parse in structure
@@ -67,6 +70,6 @@ void menuCalcStatistics();
 /**
  * @brief Save the table
  */
-void menuSaveToFile();
+void menuSaveToFile(const char *filename);
 
 #endif //PROJECT_OF_COURCE_PRODUCTMANAGER_H
