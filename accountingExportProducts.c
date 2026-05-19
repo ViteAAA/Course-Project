@@ -12,6 +12,10 @@ int productsCount;
 CompanyStat statistics[MAX_PRODUCTS];
 int statisticsCount;
 
+void ClearBuff() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+}
 
 void outputInConsole() {
     for (int i = 0; i < productsCount; i++) {
@@ -107,10 +111,28 @@ int ValidateProductionAndExport(const float *production, const float *exportCoun
 }
 
 void validName(char *str) {
-    fgets(str, sizeof(str), stdin);
-    str[strcspn(str, "\n")] = 0;
-    if (strlen(str) > MAX_LENGTH_NAME || strlen(str) == 0) {
-        puts("Слишком длинное строка");
+    if (fgets(str, MAX_LENGTH_NAME, stdin) == NULL) {
+        validName(str);
+    }
+
+    // Ищем символ переноса строки
+    const size_t len = strcspn(str, "\n");
+
+    if (str[len] == '\n') {
+        // Если '\n' найден, значит строка поместилась полностью, буфер чист
+        str[len] = '\0';
+    } else {
+        // Если '\n' НЕТ, значит введенная строка была слишком длинной
+        puts("Слишком длинная строка! Ограничение превышено. Повторите ввод:");
+
+        // Вот теперь очищаем хвост, который не поместился в fgets
+        ClearBuff();
+        validName(str); // Возврат к началу цикла для повторного ввода
+
+    }
+    // Проверка на пустой ввод (если пользователь просто нажал Enter)
+    if (strlen(str) == 0) {
+        puts("Строка не должна быть пустой! Повторите ввод:");
         validName(str);
     }
 }
@@ -137,7 +159,7 @@ int isValidDate(const ProductDate *date) {
 
 
 void writeInId(const int id_of_prod) {
-    products[id_of_prod].id = id_of_prod;
+    products[id_of_prod].id = id_of_prod + 1;
 }
 
 void writeInDate(const char *str, const int id_of_prod, int *exit) {
@@ -374,9 +396,7 @@ void menuUpdateRecord() {
     if (isInvalid()) {
         return;
     }
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-    }
+    ClearBuff();
     // plug("Обновление записи");
     puts("Введите номер записи");
     char char_num_of_record[MAX_LENGTH_NAME];
@@ -443,8 +463,8 @@ void swap(CompanyStat *a, CompanyStat *b) {
 }
 
 void merge(CompanyStat arr[], const int left, const int mid, const int right) {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
+    const int n1 = mid - left + 1;
+    const int n2 = right - mid;
 
     // Создаем временные массивы для левой и правой половин
     CompanyStat *L = (CompanyStat*)malloc(n1 * sizeof(CompanyStat));
@@ -638,9 +658,7 @@ void menuSaveToFile(const char *filename) {
         puts("Вначале выполните расчет");
         return;
     }
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-    }
+    ClearBuff();
 
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
