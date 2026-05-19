@@ -136,11 +136,8 @@ int isValidDate(const ProductDate *date) {
 }
 
 
-void writeInId(const char *str, const int id_of_prod) {
-    char *endPtr;
-    products[id_of_prod].id = strtol(str, &endPtr, 10);
-    // printf("\n%d\n", products[id_of_prod].id);
-    // end
+void writeInId(const int id_of_prod) {
+    products[id_of_prod].id = id_of_prod;
 }
 
 void writeInDate(const char *str, const int id_of_prod, int *exit) {
@@ -182,7 +179,7 @@ void writeInPercentOfExport(const int id_of_prod) {
  * @param str String to split
 */
 void splitInfo(const char *str) {
-    int type_of_convert = 0;
+    int type_of_convert = 1;
     int count_of_prods = 0;
     char record[strlen(str)];
     int exit = 1;
@@ -191,9 +188,6 @@ void splitInfo(const char *str) {
         if (str[i] == ';') {
             record[j] = '\0';
             switch (type_of_convert) {
-                case 0:
-                    writeInId(record, count_of_prods);
-                    break;
                 case 1:
                     writeInDate(record, count_of_prods, &exit);
                     break;
@@ -219,9 +213,6 @@ void splitInfo(const char *str) {
         } else if (str[i] == '\n') {
             record[j] = '\0';
             switch (type_of_convert) {
-                case 0:
-                    writeInId(record, count_of_prods);
-                    break;
                 case 1: writeInDate(record, count_of_prods, &exit);
                     break;
                 case 2: writeInCompanyName(record, count_of_prods);
@@ -237,8 +228,9 @@ void splitInfo(const char *str) {
                 default:
                     break;
             }
+            writeInId(count_of_prods);
             count_of_prods++;
-            type_of_convert = 0;
+            type_of_convert = 1;
             strcpy(record, "");
             j = 0;
         } else {
@@ -255,78 +247,6 @@ void splitInfo(const char *str) {
     // outputInConsole();
 }
 
-void splitInfoLine(const char *str) {
-    int type_of_convert = 0;
-    int count_of_prods = 0;
-    char record[strlen(str)];
-    int exit = 1;
-    int j = 0;
-    for (int i = 0; i < strlen(str); i++) {
-        if (str[i] == ';') {
-            record[j] = '\0';
-            switch (type_of_convert) {
-                case 0:
-                    writeInId(record, count_of_prods);
-                    break;
-                case 1:
-                    writeInDate(record, count_of_prods, &exit);
-                    break;
-                case 2:
-                    writeInCompanyName(record, count_of_prods);
-                    break;
-                case 3:
-                    writeInProductName(record, count_of_prods);
-                    break;
-                case 4:
-                    writeInProductionCount(record, count_of_prods);
-                    break;
-                case 5:
-                    writeInExportCount(record, count_of_prods);
-                    writeInPercentOfExport(count_of_prods);
-                    break;
-                default:
-                    break;
-            }
-            type_of_convert++;
-            strcpy(record, "");
-            j = 0;
-        } else if (str[i] == '\n') {
-            record[j] = '\0';
-            switch (type_of_convert) {
-                case 0:
-                    writeInId(record, count_of_prods);
-                    break;
-                case 1: writeInDate(record, count_of_prods, &exit);
-                    break;
-                case 2: writeInCompanyName(record, count_of_prods);
-                    break;
-                case 3: writeInProductName(record, count_of_prods);
-                    break;
-                case 4: writeInProductionCount(record, count_of_prods);
-                    break;
-                case 5:
-                    writeInExportCount(record, count_of_prods);
-                    writeInPercentOfExport(count_of_prods);
-                    break;
-                default:
-                    break;
-            }
-            count_of_prods++;
-            type_of_convert = 0;
-            strcpy(record, "");
-        } else {
-            record[j] = str[i];
-            j++;
-        }
-        if (!exit) {
-            puts("В структуру попали не верные данные, структура будет очищена");
-            productsCount = 0;
-            return;
-        }
-    }
-    productsCount = count_of_prods - 1;
-    // outputInConsole();
-}
 
 
 void menuReadFromFile(const char *filename) {
