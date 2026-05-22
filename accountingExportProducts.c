@@ -12,9 +12,22 @@ int productsCount;
 CompanyStat statistics[MAX_PRODUCTS];
 int statisticsCount;
 
-void ClearBuff() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
+void ClearBuff(const char *str) {
+    if (str == NULL) return;
+
+    // Ищем символ заменяющий перенос строки
+    char *newline = strchr(str, '\n');
+
+    if (newline != NULL) {
+        // Если нашли, просто заменяем его на символ конца строки '\0'
+        *newline = '\0';
+    }
+    else {
+        // Если '\n' НЕ нашли, значит строка не поместилась, и в буфере остался мусор.
+        // Только в этом случае вычищаем stdin!
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) {}
+    }
 }
 
 void outputInConsole() {
@@ -126,7 +139,8 @@ void validName(char *str) {
         puts("Слишком длинная строка! Ограничение превышено. Повторите ввод:");
 
         // Вот теперь очищаем хвост, который не поместился в fgets
-        ClearBuff();
+
+        ClearBuff(str);
         validName(str); // Возврат к началу цикла для повторного ввода
 
     }
@@ -170,7 +184,9 @@ void writeInDate(const char *str, const int id_of_prod, int *exit) {
         products[id_of_prod].date.year = 0;
         *exit = 0;
         puts("Не верная дата, введите снова");
+        return;
     }
+    *exit = 1;
 }
 
 void writeInCompanyName(const char *str, const int id_of_prod) {
@@ -396,18 +412,25 @@ void menuUpdateRecord() {
     if (isInvalid()) {
         return;
     }
-    ClearBuff();
     // plug("Обновление записи");
     puts("Введите номер записи");
     char char_num_of_record[MAX_LENGTH_NAME];
-    fgets(char_num_of_record, sizeof(char_num_of_record), stdin);
+    if (fgets(char_num_of_record, sizeof(char_num_of_record), stdin) != NULL) {
+        ClearBuff(char_num_of_record); // И буфер чист, и строка без '\n'
+    }
     const int index_of_record = strtol(char_num_of_record, NULL, 10) - 1;
+    if (index_of_record > productsCount) {
+        printf("Такого индекса в таблице нет, максимальный индекс - %d\n", productsCount);
+        return;
+    }
     char input_string[MAX_LENGTH_NAME];
     puts("Введите дату");
-    int exit = 1;
-    while (exit) {
-        fgets(input_string, sizeof(input_string), stdin);
-        writeInDate(input_string, index_of_record, &exit);
+    int exit = 0;
+    while (!exit) {
+        if (fgets(input_string, sizeof(input_string), stdin) != NULL) {
+            ClearBuff(input_string); // И буфер чист, и строка без '\n'
+            writeInDate(input_string, index_of_record, &exit);
+        }
     }
 
     puts("Введите название компании");
@@ -419,28 +442,34 @@ void menuUpdateRecord() {
     strcpy(products[index_of_record].productName, input_string);
 
     exit = 0;
-    while (exit) {
+    while (!exit) {
         puts("Введите количество произведенных продуктов");
-        fgets(input_string, sizeof(input_string), stdin);
+        if (fgets(input_string, sizeof(input_string), stdin) != NULL) {
+            ClearBuff(input_string); // И буфер чист, и строка без '\n'
+        }
         products[index_of_record].productionCount = strtof(input_string, NULL);
 
         puts("Введите количество продуктов для экспорта");
-        fgets(input_string, sizeof(input_string), stdin);
+        if (fgets(input_string, sizeof(input_string), stdin) != NULL) {
+            ClearBuff(input_string); // И буфер чист, и строка без '\n'
+        }
         products[index_of_record].exportCount = strtof(input_string, NULL);
 
         if (ValidateProductionAndExport(&products[index_of_record].productionCount,
                                         &products[index_of_record].exportCount)) {
-            exit = 0;
+            exit = 1;
             products[index_of_record].percentOfExport =
                     (products[index_of_record].exportCount / products[index_of_record].productionCount) * 100;
         } else {
             puts("Ошибка ввода: проверьте корректность данных.");
         }
     }
-};
+    printf("Запись %d успешно изменена \n", index_of_record + 1);
+}
 
 void menuDeleteRecord(const int id_of_deleting_record) {
     if (isInvalid()) {
+        printf("Введен не верный номер записи\n");
         return;
     }
     if (id_of_deleting_record > productsCount || id_of_deleting_record < 0) {
@@ -452,7 +481,7 @@ void menuDeleteRecord(const int id_of_deleting_record) {
         products[i].id -= 1;
     }
     productsCount--;
-
+    printf("Запись %d успешно удалена \n", id_of_deleting_record + 1);
     // outputInConsole();
 }
 
@@ -631,17 +660,20 @@ void menuCalcStatistics() {
     // Найдём максимум для масштабирования бара
     float maxProd = 0;
     for (int i = 0; i < uniqueCount; ++i) {
-        if (stats[i].percentOfExport > maxProd) maxProd = stats[i].percentOfExport;
+        if (stats[i].percentOfExport > maxProd) {
+            maxProd = stats[i].percentOfExport;
+        }
     }
 
     printTableFromGraph(uniqueCount, stats);
 
     printGraph(uniqueCount, stats, maxProd);
-    // График
+
     for (int i = 0; i < uniqueCount; i++) {
         strcpy(statistics[i].companyName, stats[i].companyName);
         statistics[i].percentOfExport = stats[i].percentOfExport;
     }
+    statisticsCount = uniqueCount;
 }
 
 void saveStruct(FILE *file) {
@@ -658,7 +690,8 @@ void menuSaveToFile(const char *filename) {
         puts("Вначале выполните расчет");
         return;
     }
-    ClearBuff();
+
+    ClearBuff(filename);
 
     FILE *file = fopen(filename, "w");
     if (file == NULL) {

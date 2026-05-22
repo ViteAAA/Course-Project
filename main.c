@@ -53,6 +53,11 @@ static void dialogSaveToFile() {
     menuSaveToFile(filename);
 }
 
+static void ClearBuff() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 
 int main() {
 
@@ -65,8 +70,10 @@ int main() {
 
 
     while (choice != 0) {
+
         menuPrintOptions();
         scanf("%d", &choice);
+        ClearBuff();
         switch (choice) {
             case 1:
                 dialogReadFromFile();
