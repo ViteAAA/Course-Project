@@ -65,6 +65,9 @@ void outputInConsoleOneProd(ProductInfo prod) {
     printf("  \"percentOfExport\": %.2f\n", prod.percentOfExport);
     printf("}\n");
 }
+void resetCalculateTable() {
+    statisticsCount = 0;
+}
 
 ProductDate SplitStringToDate(const char *str) {
     // Если строка пустая, возвращаем нулевую дату
@@ -329,6 +332,7 @@ int splitInfo(const char *str) {
 
 
 void menuReadFromFile(const char *filename) {
+    resetCalculateTable();
     // plug("Чтение из файла");
     FILE *in = fopen(filename, "r");
     if (in == NULL) {
@@ -360,15 +364,15 @@ void menuPrintTable() {
     }
 
     // Печатаем заголовок таблицы (один раз перед циклом, если у тебя массив)
-    printf("| %-3s | %-10s | %-30s | %-30s | %-30s | %-30s | %-25s|\n",
+    printf("| %-3s | %-10s | %-30s | %-40s | %-30s | %-30s | %-25s|\n",
            "ID", "Дата", "Наименование предприятия", "Наименование изделия", "Выпущено, млн.р.",
            "В том числе на экспорт, млн.р.", "Доля экспорта в доходе, %");
     printf(
-        "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
     // Печать строки данных
     for (int i = 0; i < productsCount; i++) {
-        printf("| %03d | %02d.%02d.%-4d | %-30.15s | %-30.15s | %30.2f | %30.2f | %25.2f|\n",
+        printf("| %03d | %02d.%02d.%-4d | %-30.30s | %-40.40s | %30.2f | %30.2f | %25.2f|\n",
                products[i].id,
                products[i].date.day, products[i].date.month, products[i].date.year,
                products[i].companyName,
@@ -378,10 +382,10 @@ void menuPrintTable() {
                products[i].percentOfExport);
     }
     printf(
-        "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 };
 
-void writeRecord(ProductInfo *newProduct, int prod_id) {
+void writeRecord(ProductInfo *newProduct, const int prod_id) {
     newProduct->id = prod_id;
     char test_str[MAX_LENGTH_NAME];
     int exit = 1;
@@ -425,6 +429,7 @@ void writeRecord(ProductInfo *newProduct, int prod_id) {
 
 
 void menuAddRecord() {
+    resetCalculateTable();
     printf("\n");
     if (productsCount + 1 > MAX_PRODUCTS) {
         puts("Превышено максимальное количество записей (1000)");
@@ -460,6 +465,7 @@ void menuAddRecord() {
 
 
 void menuUpdateRecord() {
+    resetCalculateTable();
     if (isInvalid()) {
         return;
     }
@@ -482,6 +488,7 @@ void menuUpdateRecord() {
 }
 
 void menuDeleteRecord(const int id_of_deleting_record) {
+    resetCalculateTable();
     if (isInvalid()) {
         printf("Введен не верный номер записи\n");
         return;
@@ -570,8 +577,8 @@ void mergeSort(CompanyStat arr[], const int left, const int right) {
     merge(arr, left, mid, right);
 }
 
-void printBar(const float value, const float max, const int width) {
-    const int barLen = (int) ((value / max) * (float) width);
+void printBar(const float value, const int width) {
+    const int barLen = (int) (value / 100 * (float) width);
     for (int i = 0; i < barLen; ++i) {
         putchar('#');
     }
@@ -638,8 +645,8 @@ void summation(int *uniqueCount, CompanyStat *stats) {
  */
 void printGraph(const int count, CompanyStat *stats, const float maxProd) {
     for (int i = 0; i < count; ++i) {
-        printf("%-20s | ", stats[i].companyName);
-        printBar(stats[i].percentOfExport, maxProd, 40); // 40 символов ширина бара
+        printf("%-30s | ", stats[i].companyName);
+        printBar(stats[i].percentOfExport, 40); // 40 символов ширина бара
         printf(" (%.2f)\n", stats[i].percentOfExport);
     }
 }
@@ -699,6 +706,7 @@ void menuCalcStatistics() {
 }
 
 void saveStruct(FILE *file) {
+    fprintf(file, "Наименование предприятия;Доля экспорта в доходе\n");
     for (int i = 0; i < productsCount; i++) {
         fprintf(file, "%s;%f\n",
                 products[i].companyName,
@@ -723,5 +731,5 @@ void menuSaveToFile(const char *filename) {
     saveStruct(file);
 
     fclose(file);
-    printf("Данные успешно сохранены в %s\n", filename);
+    printf("Данные успешно сохранены");
 }
